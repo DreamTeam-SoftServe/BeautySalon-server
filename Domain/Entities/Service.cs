@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain
+namespace Domain.Entities
 {
-    public class Service
+    public class Service : BaseEntitie
     {
-        public int Id { get; set; }
         public string Title { get; set; }   
         public int Duration { get; set; }
         public int ServicePrice { get; set; }

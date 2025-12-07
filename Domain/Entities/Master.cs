@@ -1,16 +1,13 @@
-﻿using Domain.Entities;
-using Domain.Entities.Domain.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain
+namespace Domain.Entities
 {
-    public class Master
+    public class Master : BaseEntitie
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public GenderType Gender { get; set; }

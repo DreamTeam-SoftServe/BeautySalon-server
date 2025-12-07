@@ -7,20 +7,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain
+namespace Domain.Entities
 {
-    public class ServiceAppointment
+    public class ServiceAppointment : BaseEntitie
     {
-        public int id { get; set; }
-        public int totalPrice { get; set; }
-        public DateTime start_date { get; set; }
-        public int serviceId { get; set; }
-        public Service service { get; set; }
-        public int clientId { get; set; }
-        public Client client { get; set; }
-        public int masterId { get; set; } 
-        public Master master { get; set; }
-        public AppointmentStatus status { get; set; }
+        public int TotalPrice { get; set; }
+        public DateTime Start_date { get; set; }
+        public Guid ServiceId { get; set; }
+        public Service Service { get; set; }
+        public Guid ClientId { get; set; }
+        public Client Client { get; set; }
+        public Guid MasterId { get; set; } 
+        public Master Master { get; set; }
+        public AppointmentStatus Status { get; set; }
         public Payment Payment { get; set; }
     }
 }

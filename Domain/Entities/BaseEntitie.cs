@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Enum
+namespace Domain.Entities
 {
-    public enum GenderType {
-        MALE,
-        FEMALE,
-        OTHER
+    public abstract class BaseEntitie
+    {
+        public Guid Id { get; set; }
     }
 }
