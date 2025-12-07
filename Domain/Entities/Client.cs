@@ -12,6 +12,6 @@ namespace Domain.Entities
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; } 
-        public virtual List<ServiceAppointment> ServicesHistory { get; set; }
+        public List<ServiceAppointment> ServicesHistory { get; set; }
     }
 }
