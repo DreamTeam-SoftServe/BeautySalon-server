@@ -7,7 +7,7 @@ using Domain.Entities;
 
 namespace Domain.Entities
 {
-    public class Client : BaseEntitie
+    public class Client : BaseEntitiy
     {
         public string Name { get; set; }
         public string Phone { get; set; }

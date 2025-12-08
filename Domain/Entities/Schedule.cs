@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class Schedule : BaseEntitie
+    public class Schedule : BaseEntitiy
     {
         public Guid MasterId { get; set; }
         public Master Master { get; set; }

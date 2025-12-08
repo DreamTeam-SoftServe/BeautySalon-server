@@ -7,7 +7,7 @@ using Domain.Enum;
 
 namespace Domain.Entities
 {
-    public class Master : BaseEntitie
+    public class Master : BaseEntitiy
     {
         public string Name { get; set; }
         public string Phone { get; set; }
