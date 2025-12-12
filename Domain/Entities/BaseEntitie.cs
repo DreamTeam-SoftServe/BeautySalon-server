@@ -8,7 +8,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Domain.Entities
 {
-    public abstract class BaseEntitiy
+    public abstract class BaseEntity
     {
         [BsonId]
         [BsonRepresentation(BsonType.String)]

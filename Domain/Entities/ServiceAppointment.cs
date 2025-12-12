@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class ServiceAppointment : BaseEntitiy
+    public class ServiceAppointment : BaseEntity
     {
         public int TotalPrice { get; set; }
         public DateTime Start_date { get; set; }

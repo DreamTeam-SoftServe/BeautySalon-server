@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class Product : BaseEntitiy
+    public class Product : BaseEntity
     {
         public string Name { get; set; }
         public string Brand { get; set; }
