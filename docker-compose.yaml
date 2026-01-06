@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  beautysalon-api:
+    build: .
+    container_name: beautysalon-api-container
+    ports:
+      - "5245:80"
+    environment:
+      ASPNETCORE_URLS: "http://+:80"
+      ASPNETCORE_ENVIRONMENT: "Development"  
+      MONGO_CONNECTION_STRING: "mongodb://mongo:27017"
+    depends_on:
+      - mongo
+    networks:
+      - beautysalon-network
+
+  mongo:
+    image: mongo:7.0                 
+    container_name: beautysalon-mongo
+    restart: always
+    ports:
+      - "27017:27017"                # локальний порт для прямого підключення
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "admin"
+      MONGO_INITDB_ROOT_PASSWORD: "password"
+      MONGO_INITDB_DATABASE: "BeautySalonDb"
+    volumes:
+      - mongo_data:/data/db          # збереження даних між перезапусками
+    networks:
+      - beautysalon-network
+
+volumes:
+  mongo_data:
+
+networks:
+  beautysalon-network:
+    driver: bridge
