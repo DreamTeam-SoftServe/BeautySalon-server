@@ -11,8 +11,17 @@ namespace Infrastructure.Data
         public MongoDbContext(IOptions<MongoDbSettings> options)
         {
             var settings = options.Value;
-            var client = new MongoClient(settings.ConnectionString);
+            var user = Environment.GetEnvironmentVariable("MONGO_USER");
+            var password = Environment.GetEnvironmentVariable("MONGO_PASSWORD");
+            
+                if(string.IsNullOrEmpty(user) || string.IsNullOrEmpty(password))
+                    throw new InvalidOperationException("MongoDB credentials are not set in environment variables.");
+
+            var connectionString = $"mongodb+srv://{user}:{password}@{settings.Host}/{settings.DatabaseName}?appName=Cluster0";
+
+            var client = new MongoClient(connectionString);
             _database = client.GetDatabase(settings.DatabaseName);
+   
         }
         public IMongoCollection<Client> Client => _database.GetCollection<Client>("Clients");
         public IMongoCollection<Master> Master => _database.GetCollection<Master>("Masters");
