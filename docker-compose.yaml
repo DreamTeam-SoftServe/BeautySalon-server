@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  beautysalon-api:
+    build: .
+    container_name: beautysalon-api-container
+    ports:
+      - "5245:80"
+    environment:
+      ASPNETCORE_URLS: "http://+:80"
+      ASPNETCORE_ENVIRONMENT: "Development"
+      MONGO_CONNECTION_STRING: "mongodb://admin:password@mongo:27017/BeautySalonDb?authSource=admin"
+    depends_on:
+      - mongo
+    networks:
+      - beautysalon-network
+
+  mongo:
+    image: mongo:8.0
+    container_name: beautysalon-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "admin"
+      MONGO_INITDB_ROOT_PASSWORD: "password"
+      MONGO_INITDB_DATABASE: "BeautySalonDb"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - beautysalon-network
+
+volumes:
+  mongo_data:
+
+networks:
+  beautysalon-network:
+    driver: bridge
