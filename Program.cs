@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using DotNetEnv;
 
-Env.Load();
+//Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -22,36 +22,6 @@ builder.Services.Configure<MongoDbSettings>(
 builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<IMongoDbContext>();
-
-    var client = new Client
-    {
-        Id = Guid.NewGuid(),
-        Name = "TestUser",
-        Email = "test@example.com",
-        Phone = "123-456-7890"
-    };
-
-    try
-    {
-        await context.Client.InsertOneAsync(client);
-        Console.WriteLine($"[Success] Client '{client.Name}' inserted.");
-
-        var clients = await context.Client.Find(_ => true).ToListAsync();
-        Console.WriteLine($"Total clients in DB: {clients.Count}");
-        foreach (var c in clients)
-        {
-            Console.WriteLine($" - {c.Name} ({c.Email})");
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[Error] MongoDB issue: {ex.Message}");
-    }
-}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
