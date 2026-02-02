@@ -1,7 +1,8 @@
-﻿using MongoDB.Driver;
-using Domain.Entities;
+﻿using Domain.Entities;
 using Infrastructure.Configuration;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using MongoDB.Driver.Core.Configuration;
 
 namespace Infrastructure.Data
 {
@@ -11,15 +12,11 @@ namespace Infrastructure.Data
         public MongoDbContext(IOptions<MongoDbSettings> options)
         {
             var settings = options.Value;
-            var user = Environment.GetEnvironmentVariable("MONGO_USER");
-            var password = Environment.GetEnvironmentVariable("MONGO_PASSWORD");
-            
-                if(string.IsNullOrEmpty(user) || string.IsNullOrEmpty(password))
-                    throw new InvalidOperationException("MongoDB credentials are not set in environment variables.");
 
-            var connectionString = $"mongodb+srv://{user}:{password}@{settings.Host}/{settings.DatabaseName}?appName=Cluster0";
+            if (string.IsNullOrEmpty(settings.ConnectionString))
+                    throw new InvalidOperationException("MongoDB connection string is empty.");
 
-            var client = new MongoClient(connectionString);
+            var client = new MongoClient(settings.ConnectionString);
             _database = client.GetDatabase(settings.DatabaseName);
    
         }
