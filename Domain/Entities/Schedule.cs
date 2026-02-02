@@ -10,7 +10,7 @@ namespace Domain.Entities
     public class Schedule : BaseEntity
     {
         public Guid MasterId { get; set; }
-        public Master Master { get; set; }
+        public Master? Master { get; set; }
         public List<WorkDay> WorkDays { get; set; }
         public List<ServiceAppointment> Appointments { get; set; }
     }
