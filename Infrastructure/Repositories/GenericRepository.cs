@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    public class MongoRepository<T> : IRepository<T>
+    public class GenericRepository<T> : IRepository<T>
     {
         private readonly IMongoCollection<T> _collection;
 
-        public MongoRepository(IMongoCollection<T> collection)
+        public GenericRepository(IMongoCollection<T> collection)
         {
             _collection = collection;
         }

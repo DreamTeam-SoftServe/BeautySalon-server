@@ -24,24 +24,24 @@ builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
 
 var context = builder.Services.BuildServiceProvider().GetRequiredService<IMongoDbContext>();
 
-builder.Services.AddScoped<IRepository<Client>>(sp => new MongoRepository<Client>(context.Client));
-builder.Services.AddScoped<IRepository<Master>>(sp => new MongoRepository<Master>(context.Master));
-builder.Services.AddScoped<IRepository<Payment>>(sp => new MongoRepository<Payment>(context.Payment));
-builder.Services.AddScoped<IRepository<Product>>(sp => new MongoRepository<Product>(context.Product));
-builder.Services.AddScoped<IRepository<Review>>(sp => new MongoRepository<Review>(context.Review));
-builder.Services.AddScoped<IRepository<Schedule>>(sp => new MongoRepository<Schedule>(context.Schedule));
-builder.Services.AddScoped<IRepository<Service>>(sp => new MongoRepository<Service>(context.Service));
-builder.Services.AddScoped<IRepository<ServiceAppointment>>(sp => new MongoRepository<ServiceAppointment>(context.ServiceAppointment));
-builder.Services.AddScoped<IRepository<WorkDay>>(sp => new MongoRepository<WorkDay>(context.WorkDay));
+builder.Services.AddScoped<IRepository<Client>>(sp => new GenericRepository<Client>(context.Client));
+builder.Services.AddScoped<IRepository<Master>>(sp => new GenericRepository<Master>(context.Master));
+builder.Services.AddScoped<IRepository<Payment>>(sp => new GenericRepository<Payment>(context.Payment));
+builder.Services.AddScoped<IRepository<Product>>(sp => new GenericRepository<Product>(context.Product));
+builder.Services.AddScoped<IRepository<Review>>(sp => new GenericRepository<Review>(context.Review));
+builder.Services.AddScoped<IRepository<Schedule>>(sp => new GenericRepository<Schedule>(context.Schedule));
+builder.Services.AddScoped<IRepository<Service>>(sp => new GenericRepository<Service>(context.Service));
+builder.Services.AddScoped<IRepository<ServiceAppointment>>(sp => new GenericRepository<ServiceAppointment>(context.ServiceAppointment));
+builder.Services.AddScoped<IRepository<WorkDay>>(sp => new GenericRepository<WorkDay>(context.WorkDay));
 
 var app = builder.Build();
 
-// Confidgure the HTTP request pipeline.
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+}   
 
 app.UseHttpsRedirection();
 
