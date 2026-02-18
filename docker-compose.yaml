@@ -10,6 +10,7 @@ services:
       ASPNETCORE_URLS: "http://+:80"
       ASPNETCORE_ENVIRONMENT: "Development"
       MongoDBSettings__ConnectionString: ${MONGO_CONNECTION}
+      MongoDBSettings__DatabaseName: ${MONGO_DATBASENAME}
     depends_on:
       - mongo
     networks:

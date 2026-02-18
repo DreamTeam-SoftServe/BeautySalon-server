@@ -18,8 +18,8 @@ namespace Domain.Entities
         public ServiceType Specialization { get; set; }
 
         public Dictionary<ServiceType, int> prices = new Dictionary<ServiceType, int>();
-        public Schedule Sсhedule { get; set; }
-        public Review Reviews { get; set; }
+        public Schedule? Sсhedule { get; set; }
+        public Review? Reviews { get; set; }
 
 
     }
