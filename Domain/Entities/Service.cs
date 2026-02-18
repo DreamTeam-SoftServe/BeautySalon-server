@@ -12,6 +12,8 @@ namespace Domain.Entities
     {
         public string Title { get; set; }   
         public int Duration { get; set; }
+
+        public string Description { get; set; }
         public int ServicePrice { get; set; }
         public ServiceType ServiceType { get; set; }
     }

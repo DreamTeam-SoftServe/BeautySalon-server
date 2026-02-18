@@ -8,7 +8,7 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class MasterController : Controller
     {
-    private readonly IRepository<Master> _Repository;
+        private readonly IRepository<Master> _Repository;
 
         public MasterController(IRepository<Master> repository)
         {
