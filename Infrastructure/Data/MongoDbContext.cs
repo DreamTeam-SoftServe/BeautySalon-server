@@ -30,6 +30,5 @@ namespace Infrastructure.Data
         public IMongoCollection<ServiceAppointment> ServiceAppointment => _database.GetCollection<ServiceAppointment>("ServiceAppointments");
         public IMongoCollection<WorkDay> WorkDay => _database.GetCollection<WorkDay>("WorkDays");
 
-
     }
 }

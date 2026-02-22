@@ -11,7 +11,9 @@ namespace Domain.Entities
     {
         public string Name { get; set; }
         public string Phone { get; set; }
-        public string Email { get; set; } 
+        public string Email { get; set; }
+        public string PasswordHash { get; set; }
+        public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
         public List<ServiceAppointment>? ServicesHistory { get; set; }
     }
 }
