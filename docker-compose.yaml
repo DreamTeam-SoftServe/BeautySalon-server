@@ -9,6 +9,9 @@ services:
     environment:
       ASPNETCORE_URLS: "http://+:80"
       ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
       MongoDBSettings__ConnectionString: ${MONGO_CONNECTION}
       MongoDBSettings__DatabaseName: ${MONGO_DATBASENAME}
     depends_on:

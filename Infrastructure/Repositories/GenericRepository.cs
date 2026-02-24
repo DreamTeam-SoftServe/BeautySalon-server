@@ -24,7 +24,7 @@ namespace Infrastructure.Repositories
             return results;
         }
 
-        public async Task<T?> GetByIdAsync(string id)
+        public async Task<T?> GetByIdAsync(Guid id)
         {
             var filter = Builders<T>.Filter.Eq("Id", id);
             var result = await _collection.Find(filter).FirstOrDefaultAsync();
@@ -40,7 +40,7 @@ namespace Infrastructure.Repositories
             await _collection.InsertOneAsync(entity);
         }
 
-        public async Task UpdateAsync(string id, T entity)
+        public async Task UpdateAsync(Guid id, T entity)
         {
             if (entity == null)
             {
@@ -49,7 +49,7 @@ namespace Infrastructure.Repositories
             var filter = Builders<T>.Filter.Eq("Id", id);
             await _collection.ReplaceOneAsync(filter, entity);
         }
-        public async Task DeleteAsync(string id)
+        public async Task DeleteAsync(Guid id)
         {
             var filter = Builders<T>.Filter.Eq("Id", id);
             await _collection.DeleteOneAsync(filter);
