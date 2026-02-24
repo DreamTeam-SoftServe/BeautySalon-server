@@ -2,6 +2,7 @@
 using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,7 @@ using System.Text;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/Auth")]
     public class AuthControllers : Controller
     {
         private readonly IRepository<Client> _Repository;
@@ -34,8 +35,9 @@ namespace API.Controllers
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: new[] {
-            new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
-            new Claim("id", client.Id.ToString())
+                    new Claim(ClaimTypes.NameIdentifier, client.Id.ToString()),
+                    new Claim("id", client.Id.ToString()),
+                    new Claim(ClaimTypes.Role, client.Role ?? "Client")
                 },
                 expires: DateTime.Now.AddDays(7),
                 signingCredentials: creds
@@ -48,32 +50,64 @@ namespace API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            {
-                return BadRequest(new { message = "Email required!" });
-            }
-
             var allClients = await _Repository.GetAllAsync();
-            bool emailExists = allClients.Any(c =>string.Equals(c?.Email, request?.Email, StringComparison.OrdinalIgnoreCase));
-           
-            if (emailExists)
+            var existingClient = allClients.FirstOrDefault(c =>
+                string.Equals(c.Email, request.Email, StringComparison.OrdinalIgnoreCase));
+
+            if (existingClient != null)
             {
-                return BadRequest(new { message = "Email is already in use." });
+                if (string.IsNullOrEmpty(existingClient.PasswordHash))
+                {
+                    existingClient.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                    existingClient.Name = request.Name ?? existingClient.Name;
+                    existingClient.Phone = request.Phone ?? existingClient.Phone;
+
+                    await _Repository.UpdateAsync(existingClient.Id, existingClient);
+
+                    var token = GenerateJwtToken(existingClient);
+                    return Ok(new
+                    {
+                        accessToken = token,
+                        user = new { 
+                            id = existingClient.Id,
+                            name = existingClient.Name,
+                            email = existingClient.Email,
+                            phone = existingClient.Phone,
+                            role = "Client"
+                        },
+                        message = "Guest account successfully converted to permanent!"
+                    });
+                }
+                else
+                {
+                    return BadRequest(new { message = "A user with this email address is already registered.." });
+                }
             }
 
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
             var newClient = new Client
             {
+                Id = Guid.NewGuid(),
                 Name = request.Name,
                 Email = request.Email,
                 Phone = request.Phone,
-                PasswordHash = passwordHash,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
             };
 
             await _Repository.CreateAsync(newClient);
 
-            return Ok(new { message = "Registration was successful!" });
-
+            var newToken = GenerateJwtToken(newClient);
+            return Ok(new
+            {
+                accessToken = newToken,
+                user = new
+                {
+                    id = newClient.Id,
+                    name = newClient.Name,
+                    email = newClient.Email,
+                    phone = newClient.Phone
+                },
+                message = "Registration successful!"
+            });
         }
 
         [HttpPost("login")]
@@ -83,9 +117,9 @@ namespace API.Controllers
             var client = allClients.FirstOrDefault(c =>
                 string.Equals(c?.Email, request?.Email, StringComparison.OrdinalIgnoreCase));
 
-            if (client == null || !BCrypt.Net.BCrypt.Verify(request.Password, client.PasswordHash))
+            if (client == null || string.IsNullOrEmpty(client.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, client.PasswordHash))
             {
-                return BadRequest(new { message = "Invalid email or password." });
+                return BadRequest(new { message = "Incorrect email or password." });
             }
 
             var token = GenerateJwtToken(client);
@@ -100,10 +134,33 @@ namespace API.Controllers
                     name = client.Name,
                     email = client.Email,
                     phone = client.Phone, 
-                    createdAt = client.RegisteredAt 
+                    createdAt = client.RegisteredAt,
+                    role = client.Role ?? "Client"
                 }
             });
         }
+
+        [HttpPost("set-password")]
+        public async Task<IActionResult> SetPassword([FromBody] SetPasswordDto dto)
+        {
+            var client = (await _Repository.GetAllAsync())
+                         .FirstOrDefault(c => c.Email == dto.Email);
+
+            if (client == null) return NotFound("There is no client with this number.");
+
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+
+            client.PasswordHash = passwordHash;
+            await _Repository.UpdateAsync(client.Id, client);
+
+            return Ok(new { message = "Password successfully set" });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            return Ok(new { message = "Logged out successfully" });
+        }   
 
         [Authorize]
         [HttpGet("me")]
@@ -124,7 +181,8 @@ namespace API.Controllers
                 name = myClient.Name,
                 email = myClient.Email,
                 phone = myClient.Phone,
-                createdAt = myClient.RegisteredAt
+                createdAt = myClient.RegisteredAt,
+                role = myClient.Role ?? "Client"
             });
         }
 
@@ -171,26 +229,77 @@ namespace API.Controllers
             });
         }
 
-        [HttpPost("set-password")]
-        public async Task<IActionResult> SetPassword([FromBody] SetPasswordDto dto)
+        [Authorize(Roles = "Admin")]
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
         {
-            var client = (await _Repository.GetAllAsync())
-                         .FirstOrDefault(c => c.Email == dto.Email);
+            var users = await _Repository.GetAllAsync();
+            var userList = users.Select(u => new
+            {
+                id = u.Id,
+                name = u.Name,
+                email = u.Email,
+                phone = u.Phone,
+                registeredAt = u.RegisteredAt,
+                role = u.Role ?? "Client",
+                masterProfileId = u.MasterProfileId
+            }).OrderByDescending(u => u.registeredAt);
 
-            if (client == null) return NotFound("There is no client with this number.");
-
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-
-            client.PasswordHash = passwordHash;
-            await _Repository.UpdateAsync(client.Id, client);
-
-            return Ok(new { message = "Password successfully set" });
+            return Ok(userList);
         }
 
-        [HttpPost("logout")]
-        public IActionResult Logout()
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("users/{id}/role")]
+        public async Task<IActionResult> UpdateUserRole(Guid id, [FromBody] UpdateRoleDto dto)
         {
-            return Ok(new { message = "Logged out successfully" });
-        }   
+            var allUsers = await _Repository.GetAllAsync();
+            var user = allUsers.FirstOrDefault(c => c.Id == id);
+
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            var allowedRoles = new[] { "Admin", "Client", "Master" };
+            if (!allowedRoles.Contains(dto.Role)) return BadRequest(new { message = "Invalid role" });
+
+            user.Role = dto.Role;
+
+            if (dto.Role == "Master")
+            {
+                user.MasterProfileId = dto.MasterProfileId; 
+            }
+            else
+            {
+                user.MasterProfileId = null;
+            }
+
+            await _Repository.UpdateAsync(id, user);
+
+            return Ok(new { message = "Role updated successfully", newRole = user.Role });
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                             ?? User.FindFirst("id")?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+
+            var userGuid = Guid.Parse(userIdClaim);
+
+            var client = await _Repository.GetByIdAsync(userGuid);
+            if (client == null) return NotFound("User not found");
+
+            if (!BCrypt.Net.BCrypt.Verify(dto.OldPassword, client.PasswordHash))
+            {
+                return BadRequest(new { message = "The current password is incorrect." });
+            }
+
+            client.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            await _Repository.UpdateAsync(userGuid, client);
+
+            return Ok(new { message = "Password successfully changed" });
+        }
+
     }
 }

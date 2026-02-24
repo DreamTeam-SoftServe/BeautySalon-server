@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Domain.Enum;
 
-namespace Domain.Entities
+namespace Application.DTOs
 {
-    public class Service : BaseEntity
+    public class ServiceDto
     {
-        public string Title { get; set; }   
-        public int Duration { get; set; }
+        public Guid? Id { get; set; }
+
+        public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int ServicePrice { get; set; }
-        public ServiceType ServiceType { get; set; }
+        public int ServiceType { get; set; }
+        public int Duration { get; set; }
         public string? ImageUrl { get; set; }
     }
 }

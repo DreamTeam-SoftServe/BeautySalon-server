@@ -1,11 +1,13 @@
-﻿using Domain.Interfaces;
+﻿using Domain.Entities;
+using Domain.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Domain.Entities;
 
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/Client")]
     public class ClientControllers : Controller
     {
         private readonly IRepository<Client> _Repository;
@@ -26,6 +28,30 @@ namespace API.Controllers
         {
             await _Repository.CreateAsync(client);
             return CreatedAtAction(nameof(GetAll), new { id = client.Id }, client);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(Guid id)
+        {
+            try
+            {
+                var user = await _Repository.GetByIdAsync(id);
+
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                await _Repository.DeleteAsync(id);
+
+                return Ok(new { message = "User successfully deleted" });
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Server error: " + ex.Message });
+            }
         }
     }
 }

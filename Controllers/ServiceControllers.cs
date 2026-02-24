@@ -1,18 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Domain.Entities;
 using Domain.Interfaces;
+using Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Domain.Enum;
 
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/Service")]
     public class ServiceControllers : Controller
     {
         private readonly IRepository<Service> _Repository;
+
         public ServiceControllers(IRepository<Service> repository)
         {
             _Repository = repository;
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -20,23 +25,50 @@ namespace API.Controllers
 
             var result = services.Select(s => new
             {
-                id = s.Id, 
+                id = s.Id,
                 title = s.Title,
                 duration = s.Duration,
                 description = s.Description,
-                price = s.ServicePrice, 
-                category = s.ServiceType.ToString() 
+                servicePrice = s.ServicePrice,
+                serviceType = (int)s.ServiceType,
+                imageUrl = s.ImageUrl
             });
 
-            return Ok(result); 
+            return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<IActionResult> Create(Service service)
+        public async Task<IActionResult> Create([FromBody] ServiceDto dto)
         {
-            await _Repository.CreateAsync(service);
-            return CreatedAtAction(nameof(GetAll), new { id = service.Id }, service);
+            var service = new Service
+            {
+                Id = Guid.NewGuid(),
+                Title = dto.Title,
+                Description = dto.Description,
+                ServicePrice = dto.ServicePrice,
+                Duration = dto.Duration,
+                ImageUrl = dto.ImageUrl,
+                ServiceType = (Domain.Enum.ServiceType)dto.ServiceType
+            };
 
+            await _Repository.CreateAsync(service);
+
+            return CreatedAtAction(nameof(GetAll), new { id = service.Id }, service);
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")] 
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var service = await _Repository.GetByIdAsync(id);
+            if (service == null)
+            {
+                return NotFound(new { message = "Service not found" });
+            }
+
+            await _Repository.DeleteAsync(id);
+            return Ok(new { message = "Service deleted successfully" });
+        }  
     }
 }

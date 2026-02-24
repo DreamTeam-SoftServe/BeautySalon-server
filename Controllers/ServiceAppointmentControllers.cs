@@ -35,41 +35,71 @@ namespace API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateAppointmentDto dto)
         {
-            var client = (await _ClientRepo.GetAllAsync())
-                         .FirstOrDefault(c => c.Phone == dto.Phone);
-
             Guid finalClientId;
 
-            if (client == null)
+            if (dto.ClientId.HasValue && dto.ClientId.Value != Guid.Empty)
             {
-                var newClient = new Client
-                {
-                    Id = Guid.NewGuid(),
-                    Name = dto.Name,
-                    Phone = dto.Phone,
-                    Email = dto.Email
-                };
-                await _ClientRepo.CreateAsync(newClient);
-                finalClientId = newClient.Id;
+                finalClientId = dto.ClientId.Value;
             }
             else
             {
-                finalClientId = client.Id;
+                var client = (await _ClientRepo.GetAllAsync())
+                             .FirstOrDefault(c => c.Phone == dto.Phone);
+
+                if (client == null)
+                {
+                    var newClient = new Client
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = dto.Name,
+                        Phone = dto.Phone,
+                        Email = dto.Email
+                    };
+                    await _ClientRepo.CreateAsync(newClient);
+                    finalClientId = newClient.Id;
+                }
+                else
+                {
+                    finalClientId = client.Id;
+                }
             }
+
+            var parsedDate = DateTime.Parse(dto.Start_date);
+            var exactTime = DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
 
             var appointment = new ServiceAppointment
             {
                 Id = Guid.NewGuid(),
-                ClientId = finalClientId, 
+                ClientId = finalClientId,
                 MasterId = dto.MasterId,
                 ServiceId = dto.ServiceId,
-                Start_date = dto.Start_date,
-                Status = AppointmentStatus.IN_PROGRESS,
-                TotalPrice = 0 
+                Start_date = exactTime, 
+
+                Status = AppointmentStatus.SCHEDULED
             };
 
             await _Repository.CreateAsync(appointment);
             return Ok(new { success = true, clientId = finalClientId });
+        }
+
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusDto dto)
+        {
+            var booking = await _Repository.GetByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound(new { message = "No booking found" });
+            }
+
+            if (Enum.TryParse<AppointmentStatus>(dto.NewStatus, true, out var parsedStatus))
+            {
+                booking.Status = parsedStatus;
+                await _Repository.UpdateAsync(id, booking);
+
+                return Ok(new { message = $"Status successfully changed to {parsedStatus}" });
+            }
+
+            return BadRequest(new { message = "Invalid status" });
         }
 
         [Authorize]
@@ -124,6 +154,85 @@ namespace API.Controllers
             }).ToList();
 
             return Ok(userBookings);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin-list")]
+        public async Task<IActionResult> GetAdminList()
+        {
+            var appointments = await _Repository.GetAllAsync();
+            var services = await _ServiceRepo.GetAllAsync();
+            var masters = await _MasterRepo.GetAllAsync();
+            var clients = await _ClientRepo.GetAllAsync(); 
+
+            var adminBookings = appointments
+                .OrderByDescending(a => a.Start_date)
+                .Select(a => {
+                    var service = services.FirstOrDefault(s => s.Id == a.ServiceId);
+                    var master = masters.FirstOrDefault(m => m.Id == a.MasterId);
+                    var client = clients.FirstOrDefault(c => c.Id == a.ClientId);
+
+                    return new
+                    {
+                        id = a.Id.ToString(),
+                        bookingId = "BS-" + a.Id.ToString().Substring(0, 8).ToUpper(),
+
+                        clientName = client?.Name ?? "Unknown",
+                        clientPhone = client?.Phone ?? "No number",
+                        clientEmail = client?.Email ?? "-",
+
+                        serviceName = service?.Title ?? "Deleted service",
+                        masterName = master?.Name ?? "‘Any master",
+
+                        date = a.Start_date.ToString("yyyy-MM-dd"),
+                        time = a.Start_date.ToString("HH:mm"),
+                        status = a.Status.ToString(),
+                        price = service?.ServicePrice ?? 0
+                    };
+                }).ToList();
+
+            return Ok(adminBookings);
+        }
+
+        [Authorize(Roles = "Master,Admin")] 
+        [HttpGet("master-list")]
+        public async Task<IActionResult> GetMasterBookings()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirst("id")?.Value;
+
+            var clients = await _ClientRepo.GetAllAsync();
+            var me = clients.FirstOrDefault(c => c.Id.ToString() == userId);
+
+            if (me == null || me.MasterProfileId == null || me.MasterProfileId == Guid.Empty)
+            {
+                return BadRequest(new { message = "No master profile is linked to this account. Please contact the administrator." });
+            }
+
+            var allAppointments = await _Repository.GetAllAsync();
+            var services = await _ServiceRepo.GetAllAsync();
+
+            var myAppointments = allAppointments
+                .Where(a => a.MasterId == me.MasterProfileId)
+                .OrderByDescending(a => a.Start_date)
+                .Select(a => {
+                    var service = services.FirstOrDefault(s => s.Id == a.ServiceId);
+                    var client = clients.FirstOrDefault(c => c.Id == a.ClientId);
+
+                    return new
+                    {
+                        id = a.Id.ToString(),
+                        bookingId = "BS-" + a.Id.ToString().Substring(0, 8).ToUpper(),
+                        clientName = client?.Name ?? "Unknown",
+                        clientPhone = client?.Phone ?? "No number",
+                        serviceName = service?.Title ?? "Removed service",
+                        date = a.Start_date.ToString("yyyy-MM-dd"),
+                        time = a.Start_date.ToString("HH:mm"),
+                        status = a.Status.ToString(),
+                        price = service?.ServicePrice ?? 0
+                    };
+                }).ToList();
+
+            return Ok(myAppointments);
         }
     }
 }
