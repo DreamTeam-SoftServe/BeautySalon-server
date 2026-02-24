@@ -13,8 +13,8 @@ namespace Application.DTOs
         public string Email { get; set; }
 
         public Guid ServiceId { get; set; }
-        public Guid ClientId { get; set; }
+        public Guid? ClientId { get; set; }
         public Guid MasterId { get; set; }
-        public DateTime Start_date { get; set; }
+        public string Start_date { get; set; }
     }
 }

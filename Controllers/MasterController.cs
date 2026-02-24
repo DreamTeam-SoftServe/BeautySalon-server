@@ -1,6 +1,8 @@
-﻿using Domain.Entities;
+﻿using Application.DTOs; 
+using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -11,11 +13,14 @@ namespace API.Controllers
     {
         private readonly IRepository<Master> _Repository;
         private readonly IRepository<ServiceAppointment> _appointmentRepo;
+        private readonly IRepository<Client> _clientRepository;
 
-        public MasterController(IRepository<Master> repository, IRepository<ServiceAppointment> appointmentRepo)
+
+        public MasterController(IRepository<Master> repository, IRepository<ServiceAppointment> appointmentRepo, IRepository<Client> clientRepository)
         {
             _Repository = repository;
             _appointmentRepo = appointmentRepo;
+            _clientRepository = clientRepository;
         }
 
         [HttpGet]
@@ -26,10 +31,52 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Master master)
+        public async Task<IActionResult> Create([FromBody] CreateMasterDto dto)
         {
+            var masterId = Guid.NewGuid();
+            var master = new Master
+            {
+                Id = masterId,
+                Name = dto.Name,
+                Phone = dto.Phone,
+                Gender = (GenderType)dto.Gender,
+                Rating = 5.0,
+                PricePersent = dto.PricePersent > 0 ? dto.PricePersent : 40,
+                ProfLevel = (ProficiencyType)dto.ProfLevel,
+                Specialization = (ServiceType)dto.Specialization,
+                ImageUrl = dto.ImageUrl,
+
+                prices = new Dictionary<ServiceType, int>
+                {
+                    { (ServiceType)dto.Specialization, 500 }
+                },
+
+                Sсhedule = new Schedule
+                {
+                    WorkDays = new List<WorkDay>(),
+                    Appointments = new List<ServiceAppointment>()
+                }
+            };
+
             await _Repository.CreateAsync(master);
-            return CreatedAtAction(nameof(GetAll), new { id = master.Id }, master);
+
+            if (!string.IsNullOrEmpty(dto.Email) && !string.IsNullOrEmpty(dto.Password))
+            {
+                var clientAccount = new Client
+                {
+                    Id = Guid.NewGuid(),
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    Phone = dto.Phone,
+                    Role = "Master",
+                    MasterProfileId = masterId,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+                };
+
+                await _clientRepository.CreateAsync(clientAccount);
+            }
+
+            return Ok(master);
         }
 
         [HttpGet("{id}/busy-slots")]
@@ -42,13 +89,36 @@ namespace API.Controllers
             if (allAppointments == null) return Ok(new List<string>());
 
             var busySlots = allAppointments
-                .Where(a => a.MasterId == id)
-                .Where(a => a.Start_date.Date == selectedDate.Date)
-                .Select(a => a.Start_date.ToString("HH:mm"))
-                .Distinct()
-                .ToList();
+                    .Where(a => a.MasterId == id)
+                    .Where(a => a.Start_date.Date == selectedDate.Date)
+                    .Select(a => a.Start_date.ToString("HH:mm"))
+                    .Distinct()
+                    .ToList();
 
             return Ok(busySlots);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteMaster(Guid id)
+        {
+            try
+            {
+                var master = await _Repository.GetByIdAsync(id);
+
+                if (master == null)
+                {
+                    return NotFound(new { message = "No craftsmen found" });
+                }
+
+                await _Repository.DeleteAsync(id);
+
+                return Ok(new { message = "Master successfully removed" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Server error: " + ex.Message });
+            }
         }
     }
 }

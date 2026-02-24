@@ -1,21 +1,25 @@
+﻿using API.BackgroundJobs;
+using API.Services;
 using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Configuration;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 
 //Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+
+
 
 BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 // Add services to the container.
@@ -56,6 +60,22 @@ builder.Services.AddAuthentication("Bearer")
         };
     });
 
+var accessKey = builder.Configuration["AWS:AccessKey"];
+var secretKey = builder.Configuration["AWS:SecretKey"];
+
+ if (!string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey))
+{
+    var awsOptions = builder.Configuration.GetAWSOptions();
+    awsOptions.Credentials = new Amazon.Runtime.BasicAWSCredentials(accessKey, secretKey);
+    builder.Services.AddDefaultAWSOptions(awsOptions);
+
+    builder.Services.AddAWSService<Amazon.S3.IAmazonS3>();
+}
+else
+{
+    Console.WriteLine("AWS keys did not load from the .env file!");
+}
+
 var context = builder.Services.BuildServiceProvider().GetRequiredService<IMongoDbContext>();
 
 builder.Services.AddScoped<IRepository<Client>>(sp => new GenericRepository<Client>(context.Client));
@@ -68,6 +88,9 @@ builder.Services.AddScoped<IRepository<Service>>(sp => new GenericRepository<Ser
 builder.Services.AddScoped<IRepository<ServiceAppointment>>(sp => new GenericRepository<ServiceAppointment>(context.ServiceAppointment));
 builder.Services.AddScoped<IRepository<WorkDay>>(sp => new GenericRepository<WorkDay>(context.WorkDay));
 
+builder.Services.AddHostedService<AutoCloseBookingsService>();
+
+builder.Services.AddScoped<IImageService, S3ImageService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
