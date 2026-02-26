@@ -53,5 +53,15 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Server error: " + ex.Message });
             }
         }
+
+        [AllowAnonymous]
+        [HttpGet("count")]
+        public async Task<IActionResult> GetClientsCount()
+        {
+            var clients = await _Repository.GetAllAsync();
+            var count = clients.Count();
+
+            return Ok(count);
+        }
     }
 }

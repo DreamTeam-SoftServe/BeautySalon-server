@@ -76,21 +76,33 @@ else
     Console.WriteLine("AWS keys did not load from the .env file!");
 }
 
-var context = builder.Services.BuildServiceProvider().GetRequiredService<IMongoDbContext>();
+builder.Services.AddScoped<IImageService, S3ImageService>();
 
-builder.Services.AddScoped<IRepository<Client>>(sp => new GenericRepository<Client>(context.Client));
-builder.Services.AddScoped<IRepository<Master>>(sp => new GenericRepository<Master>(context.Master));
-builder.Services.AddScoped<IRepository<Payment>>(sp => new GenericRepository<Payment>(context.Payment));
-builder.Services.AddScoped<IRepository<Product>>(sp => new GenericRepository<Product>(context.Product));
-builder.Services.AddScoped<IRepository<Review>>(sp => new GenericRepository<Review>(context.Review));
-builder.Services.AddScoped<IRepository<Schedule>>(sp => new GenericRepository<Schedule>(context.Schedule));
-builder.Services.AddScoped<IRepository<Service>>(sp => new GenericRepository<Service>(context.Service));
-builder.Services.AddScoped<IRepository<ServiceAppointment>>(sp => new GenericRepository<ServiceAppointment>(context.ServiceAppointment));
-builder.Services.AddScoped<IRepository<WorkDay>>(sp => new GenericRepository<WorkDay>(context.WorkDay));
+builder.Services.AddScoped<IRepository<Client>>(sp =>
+    new GenericRepository<Client>(
+        sp.GetRequiredService<IMongoDbContext>().Client));
+
+builder.Services.AddScoped<IRepository<Client>>(sp =>
+    new GenericRepository<Client>(sp.GetRequiredService<IMongoDbContext>().Client));
+builder.Services.AddScoped<IRepository<Master>>(sp =>
+    new GenericRepository<Master>(sp.GetRequiredService<IMongoDbContext>().Master));
+builder.Services.AddScoped<IRepository<Payment>>(sp =>
+    new GenericRepository<Payment>(sp.GetRequiredService<IMongoDbContext>().Payment));
+builder.Services.AddScoped<IRepository<Product>>(sp =>
+    new GenericRepository<Product>(sp.GetRequiredService<IMongoDbContext>().Product));
+builder.Services.AddScoped<IRepository<Review>>(sp =>
+    new GenericRepository<Review>(sp.GetRequiredService<IMongoDbContext>().Review));
+builder.Services.AddScoped<IRepository<Schedule>>(sp =>
+    new GenericRepository<Schedule>(sp.GetRequiredService<IMongoDbContext>().Schedule));
+builder.Services.AddScoped<IRepository<Service>>(sp =>
+    new GenericRepository<Service>(sp.GetRequiredService<IMongoDbContext>().Service));
+builder.Services.AddScoped<IRepository<ServiceAppointment>>(sp =>
+    new GenericRepository<ServiceAppointment>(sp.GetRequiredService<IMongoDbContext>().ServiceAppointment));
+builder.Services.AddScoped<IRepository<WorkDay>>(sp =>
+    new GenericRepository<WorkDay>(sp.GetRequiredService<IMongoDbContext>().WorkDay));
 
 builder.Services.AddHostedService<AutoCloseBookingsService>();
 
-builder.Services.AddScoped<IImageService, S3ImageService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -101,9 +113,9 @@ if (app.Environment.IsDevelopment())
 }   
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
