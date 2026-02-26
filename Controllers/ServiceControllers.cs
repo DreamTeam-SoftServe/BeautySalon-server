@@ -4,6 +4,7 @@ using Domain.Interfaces;
 using Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Domain.Enum;
+using API.Services;
 
 namespace API.Controllers
 {
@@ -12,17 +13,18 @@ namespace API.Controllers
     public class ServiceControllers : Controller
     {
         private readonly IRepository<Service> _Repository;
+        private readonly IImageService _imageService;
 
-        public ServiceControllers(IRepository<Service> repository)
+        public ServiceControllers(IRepository<Service> repository, IImageService imageService)
         {
             _Repository = repository;
+            _imageService = imageService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var services = await _Repository.GetAllAsync();
-
             var result = services.Select(s => new
             {
                 id = s.Id,
@@ -33,7 +35,6 @@ namespace API.Controllers
                 serviceType = (int)s.ServiceType,
                 imageUrl = s.ImageUrl
             });
-
             return Ok(result);
         }
 
@@ -51,9 +52,7 @@ namespace API.Controllers
                 ImageUrl = dto.ImageUrl,
                 ServiceType = (Domain.Enum.ServiceType)dto.ServiceType
             };
-
             await _Repository.CreateAsync(service);
-
             return CreatedAtAction(nameof(GetAll), new { id = service.Id }, service);
         }
 
@@ -64,6 +63,9 @@ namespace API.Controllers
             var service = await _Repository.GetByIdAsync(id);
             if (service == null)
                 return NotFound(new { message = "Service not found" });
+
+            if (!string.IsNullOrEmpty(service.ImageUrl) && service.ImageUrl != dto.ImageUrl)
+                await _imageService.DeleteImageAsync(service.ImageUrl);
 
             service.Title = dto.Title;
             service.Description = dto.Description;
@@ -84,8 +86,10 @@ namespace API.Controllers
             if (service == null)
                 return NotFound(new { message = "Service not found" });
 
-            await _Repository.DeleteAsync(id);
+            if (!string.IsNullOrEmpty(service.ImageUrl))
+                await _imageService.DeleteImageAsync(service.ImageUrl);
 
+            await _Repository.DeleteAsync(id);
             return NoContent();
         }
     }

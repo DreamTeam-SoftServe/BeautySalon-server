@@ -1,9 +1,10 @@
-﻿using Application.DTOs; 
+﻿using Application.DTOs;
 using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using API.Services;
 
 namespace API.Controllers
 {
@@ -14,13 +15,18 @@ namespace API.Controllers
         private readonly IRepository<Master> _Repository;
         private readonly IRepository<ServiceAppointment> _appointmentRepo;
         private readonly IRepository<Client> _clientRepository;
+        private readonly IImageService _imageService;
 
-
-        public MasterController(IRepository<Master> repository, IRepository<ServiceAppointment> appointmentRepo, IRepository<Client> clientRepository)
+        public MasterController(
+            IRepository<Master> repository,
+            IRepository<ServiceAppointment> appointmentRepo,
+            IRepository<Client> clientRepository,
+            IImageService imageService)
         {
             _Repository = repository;
             _appointmentRepo = appointmentRepo;
             _clientRepository = clientRepository;
+            _imageService = imageService;
         }
 
         [HttpGet]
@@ -45,12 +51,10 @@ namespace API.Controllers
                 ProfLevel = (ProficiencyType)dto.ProfLevel,
                 Specialization = (ServiceType)dto.Specialization,
                 ImageUrl = dto.ImageUrl,
-
                 prices = new Dictionary<ServiceType, int>
                 {
                     { (ServiceType)dto.Specialization, 500 }
                 },
-
                 Sсhedule = new Schedule
                 {
                     WorkDays = new List<WorkDay>(),
@@ -72,7 +76,6 @@ namespace API.Controllers
                     MasterProfileId = masterId,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
                 };
-
                 await _clientRepository.CreateAsync(clientAccount);
             }
 
@@ -89,11 +92,11 @@ namespace API.Controllers
             if (allAppointments == null) return Ok(new List<string>());
 
             var busySlots = allAppointments
-                    .Where(a => a.MasterId == id)
-                    .Where(a => a.Start_date.Date == selectedDate.Date)
-                    .Select(a => a.Start_date.ToString("HH:mm"))
-                    .Distinct()
-                    .ToList();
+                .Where(a => a.MasterId == id)
+                .Where(a => a.Start_date.Date == selectedDate.Date)
+                .Select(a => a.Start_date.ToString("HH:mm"))
+                .Distinct()
+                .ToList();
 
             return Ok(busySlots);
         }
@@ -105,14 +108,13 @@ namespace API.Controllers
             try
             {
                 var master = await _Repository.GetByIdAsync(id);
-
                 if (master == null)
-                {
                     return NotFound(new { message = "No craftsmen found" });
-                }
+
+                if (!string.IsNullOrEmpty(master.ImageUrl))
+                    await _imageService.DeleteImageAsync(master.ImageUrl);
 
                 await _Repository.DeleteAsync(id);
-
                 return Ok(new { message = "Master successfully removed" });
             }
             catch (Exception ex)
@@ -128,6 +130,9 @@ namespace API.Controllers
             var master = await _Repository.GetByIdAsync(id);
             if (master == null)
                 return NotFound(new { message = "Master not found" });
+
+            if (!string.IsNullOrEmpty(master.ImageUrl) && master.ImageUrl != dto.ImageUrl)
+                await _imageService.DeleteImageAsync(master.ImageUrl);
 
             master.Name = dto.Name;
             master.Phone = dto.Phone;
