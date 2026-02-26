@@ -120,5 +120,28 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Server error: " + ex.Message });
             }
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] CreateMasterDto dto)
+        {
+            var master = await _Repository.GetByIdAsync(id);
+            if (master == null)
+                return NotFound(new { message = "Master not found" });
+
+            master.Name = dto.Name;
+            master.Phone = dto.Phone;
+            master.Gender = (GenderType)dto.Gender;
+            master.PricePersent = dto.PricePersent > 0 ? dto.PricePersent : 40;
+            master.ProfLevel = (ProficiencyType)dto.ProfLevel;
+            master.Specialization = (ServiceType)dto.Specialization;
+            master.ImageUrl = dto.ImageUrl;
+
+            if (!string.IsNullOrEmpty(dto.Experience))
+                master.Experience = dto.Experience;
+
+            await _Repository.UpdateAsync(id, master);
+            return Ok(master);
+        }
     }
 }

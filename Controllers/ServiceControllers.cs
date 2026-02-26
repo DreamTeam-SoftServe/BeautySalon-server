@@ -58,17 +58,35 @@ namespace API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("{id}")] 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] ServiceDto dto)
+        {
+            var service = await _Repository.GetByIdAsync(id);
+            if (service == null)
+                return NotFound(new { message = "Service not found" });
+
+            service.Title = dto.Title;
+            service.Description = dto.Description;
+            service.ServicePrice = dto.ServicePrice;
+            service.Duration = dto.Duration;
+            service.ImageUrl = dto.ImageUrl;
+            service.ServiceType = (Domain.Enum.ServiceType)dto.ServiceType;
+
+            await _Repository.UpdateAsync(id, service);
+            return Ok(service);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var service = await _Repository.GetByIdAsync(id);
             if (service == null)
-            {
                 return NotFound(new { message = "Service not found" });
-            }
 
             await _Repository.DeleteAsync(id);
-            return Ok(new { message = "Service deleted successfully" });
-        }  
+
+            return NoContent();
+        }
     }
 }

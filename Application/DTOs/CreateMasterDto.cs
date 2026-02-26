@@ -14,6 +14,7 @@ namespace Application.DTOs
         public string Password { get; set; } = string.Empty;
         public int Gender { get; set; } 
         public double Rating { get; set; }
+        public string? Experience { get; set; }
         public int PricePersent { get; set; }
         public int ProfLevel { get; set; } 
         public int Specialization { get; set; } 

@@ -15,7 +15,7 @@ namespace API.Controllers
         }
 
         [HttpPost("image")]
-        public async Task<IActionResult> UploadImage([FromForm] IFormFile file, [FromQuery] string folder = "general")
+        public async Task<IActionResult> UploadImage(IFormFile file, [FromQuery] string folder = "general")
         {
             try
             {

@@ -74,6 +74,7 @@ namespace API.Controllers
                 MasterId = dto.MasterId,
                 ServiceId = dto.ServiceId,
                 Start_date = exactTime, 
+                Notes = dto.Notes,
 
                 Status = AppointmentStatus.SCHEDULED
             };
@@ -149,7 +150,8 @@ namespace API.Controllers
                     date = a.Start_date.ToString("yyyy-MM-dd"),
                     time = a.Start_date.ToString("HH:mm"),
                     status = a.Status.ToString(),
-                    price = service?.ServicePrice ?? 0 
+                    price = service?.ServicePrice ?? 0,
+                    notes = a.Notes
                 };
             }).ToList();
 
@@ -187,7 +189,8 @@ namespace API.Controllers
                         date = a.Start_date.ToString("yyyy-MM-dd"),
                         time = a.Start_date.ToString("HH:mm"),
                         status = a.Status.ToString(),
-                        price = service?.ServicePrice ?? 0
+                        price = service?.ServicePrice ?? 0,
+                        notes = a.Notes
                     };
                 }).ToList();
 
@@ -228,7 +231,8 @@ namespace API.Controllers
                         date = a.Start_date.ToString("yyyy-MM-dd"),
                         time = a.Start_date.ToString("HH:mm"),
                         status = a.Status.ToString(),
-                        price = service?.ServicePrice ?? 0
+                        price = service?.ServicePrice ?? 0,
+                        notes = a.Notes
                     };
                 }).ToList();
 

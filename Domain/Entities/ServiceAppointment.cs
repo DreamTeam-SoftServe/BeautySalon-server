@@ -19,6 +19,7 @@ namespace Domain.Entities
         public Client? Client { get; set; }
         public Guid MasterId { get; set; } 
         public Master? Master { get; set; }
+        public string? Notes { get; set; }
         public AppointmentStatus Status { get; set; }
         public Payment? Payment { get; set; }
     }
