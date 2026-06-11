@@ -6,6 +6,7 @@ using Infrastructure.Configuration;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
@@ -100,6 +101,16 @@ builder.Services.AddScoped<IRepository<ServiceAppointment>>(sp =>
     new GenericRepository<ServiceAppointment>(sp.GetRequiredService<IMongoDbContext>().ServiceAppointment));
 builder.Services.AddScoped<IRepository<WorkDay>>(sp =>
     new GenericRepository<WorkDay>(sp.GetRequiredService<IMongoDbContext>().WorkDay));
+
+//builder.Services.AddScoped<IRepository<Product>>(sp =>
+//    new GenericRepository<Product>(sp.GetRequiredService<IMongoDbContext>().Product));
+//builder.Services.AddScoped<IRepository<Order>>(sp =>
+//    new GenericRepository<Order>(sp.GetRequiredService<IMongoDbContext>().Order));
+
+//builder.Services.AddScoped<IRepository<Master>, GenericRepository<Master>>();
+//builder.Services.AddScoped<IRepository<Service>, GenericRepository<Service>>();
+builder.Services.AddScoped<IRepository<Domain.Entities.Product>, Infrastructure.Repositories.GenericRepository<Domain.Entities.Product>>();
+builder.Services.AddScoped<IRepository<Domain.Entities.Order>, Infrastructure.Repositories.GenericRepository<Domain.Entities.Order>>();
 
 builder.Services.AddHostedService<AutoCloseBookingsService>();
 

@@ -60,7 +60,7 @@ namespace API.Controllers
                 if (!await IsValidImageAsync(file, extension))
                     return BadRequest(new { message = "File content does not match its extension." });
 
-                var allowedFolders = new[] { "general", "masters", "services", "portfolio", "hero" };
+                var allowedFolders = new[] { "general", "masters", "services", "portfolio", "hero", "products" };
                 if (!allowedFolders.Contains(folder.ToLower()))
                     return BadRequest(new { message = "Invalid folder." });
 
