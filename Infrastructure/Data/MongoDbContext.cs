@@ -29,6 +29,7 @@ namespace Infrastructure.Data
         public IMongoCollection<Service> Service => _database.GetCollection<Service>("Services");
         public IMongoCollection<ServiceAppointment> ServiceAppointment => _database.GetCollection<ServiceAppointment>("ServiceAppointments");
         public IMongoCollection<WorkDay> WorkDay => _database.GetCollection<WorkDay>("WorkDays");
+        public IMongoCollection<Order> Order => _database.GetCollection<Order>("Orders");
 
     }
 }

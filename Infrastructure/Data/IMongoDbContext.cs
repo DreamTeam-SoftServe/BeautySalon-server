@@ -20,6 +20,7 @@ namespace Infrastructure.Data
         public IMongoCollection<Service> Service { get; }
         public IMongoCollection<ServiceAppointment> ServiceAppointment { get; }
         public IMongoCollection<WorkDay> WorkDay { get; }
+        public IMongoCollection<Order> Order { get; }
 
     }
 }
