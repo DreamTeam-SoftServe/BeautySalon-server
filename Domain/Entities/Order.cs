@@ -10,6 +10,10 @@ namespace Domain.Entities
         public string LastName { get; set; }
         public string PhoneNumber { get; set; }
         public string DeliveryType { get; set; }
+
+        public string? DeliveryCity { get; set; }
+        public string? DeliveryAddress { get; set; }
+
         public OrderStatus Status { get; set; }
         public decimal TotalPrice { get; set; }
         public List<OrderItem> Items { get; set; } = new List<OrderItem>();

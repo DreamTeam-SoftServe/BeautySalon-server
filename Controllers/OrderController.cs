@@ -34,6 +34,8 @@ namespace API.Controllers
                 PhoneNumber = dto.PhoneNumber,
                 DeliveryType = dto.DeliveryType,
                 Status = OrderStatus.PENDING,
+                DeliveryCity = dto.DeliveryCity, 
+                DeliveryAddress = dto.DeliveryAddress, 
                 TotalPrice = total,
                 Items = dto.Items.Select(i => new OrderItem
                 {
