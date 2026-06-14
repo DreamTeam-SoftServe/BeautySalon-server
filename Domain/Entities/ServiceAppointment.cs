@@ -17,7 +17,7 @@ namespace Domain.Entities
         public Service? Service { get; set; }
         public Guid ClientId { get; set; }
         public Client? Client { get; set; }
-        public Guid MasterId { get; set; } 
+        public Guid? MasterId { get; set; } 
         public Master? Master { get; set; }
         public string? Notes { get; set; }
         public AppointmentStatus Status { get; set; }

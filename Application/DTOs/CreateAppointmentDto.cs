@@ -14,7 +14,7 @@ namespace Application.DTOs
         public string? Notes { get; set; }
         public Guid ServiceId { get; set; }
         public Guid? ClientId { get; set; }
-        public Guid MasterId { get; set; }
+        public Guid? MasterId { get; set; }
         public string Start_date { get; set; }
     }
 }
