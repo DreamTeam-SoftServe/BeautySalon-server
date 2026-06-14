@@ -16,5 +16,6 @@ namespace Domain.Entities
         public int ServicePrice { get; set; }
         public ServiceType ServiceType { get; set; }
         public string? ImageUrl { get; set; }
+        public bool IsTraining { get; set; } = false;
     }
 }

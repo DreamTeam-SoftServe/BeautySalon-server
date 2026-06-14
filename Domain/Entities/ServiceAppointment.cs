@@ -22,5 +22,6 @@ namespace Domain.Entities
         public string? Notes { get; set; }
         public AppointmentStatus Status { get; set; }
         public Payment? Payment { get; set; }
+        public bool IsTraining { get; set; } = false;
     }
 }

@@ -33,7 +33,8 @@ namespace API.Controllers
                 description = s.Description,
                 servicePrice = s.ServicePrice,
                 serviceType = (int)s.ServiceType,
-                imageUrl = s.ImageUrl
+                imageUrl = s.ImageUrl,
+                isTraining = s.IsTraining,
             });
             return Ok(result);
         }
@@ -50,6 +51,7 @@ namespace API.Controllers
                 ServicePrice = dto.ServicePrice,
                 Duration = dto.Duration,
                 ImageUrl = dto.ImageUrl,
+                IsTraining = dto.IsTraining,
                 ServiceType = (Domain.Enum.ServiceType)dto.ServiceType
             };
             await _Repository.CreateAsync(service);
@@ -73,6 +75,7 @@ namespace API.Controllers
             service.Duration = dto.Duration;
             service.ImageUrl = dto.ImageUrl;
             service.ServiceType = (Domain.Enum.ServiceType)dto.ServiceType;
+            service.IsTraining = dto.IsTraining;
 
             await _Repository.UpdateAsync(id, service);
             return Ok(service);

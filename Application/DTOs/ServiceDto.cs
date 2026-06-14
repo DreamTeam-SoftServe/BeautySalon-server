@@ -16,5 +16,6 @@ namespace Application.DTOs
         public int ServiceType { get; set; }
         public int Duration { get; set; }
         public string? ImageUrl { get; set; }
+        public bool IsTraining { get; set; }
     }
 }

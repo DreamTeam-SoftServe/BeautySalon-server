@@ -67,6 +67,8 @@ namespace API.Controllers
             var parsedDate = DateTime.Parse(dto.Start_date);
             var exactTime = DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
 
+            var service = await _ServiceRepo.GetByIdAsync(dto.ServiceId);
+
             var appointment = new ServiceAppointment
             {
                 Id = Guid.NewGuid(),
@@ -75,8 +77,8 @@ namespace API.Controllers
                 ServiceId = dto.ServiceId,
                 Start_date = exactTime, 
                 Notes = dto.Notes,
-
-                Status = AppointmentStatus.SCHEDULED
+                Status = AppointmentStatus.SCHEDULED,
+                IsTraining = service?.IsTraining ?? false,
             };
 
             await _Repository.CreateAsync(appointment);
@@ -151,7 +153,9 @@ namespace API.Controllers
                     time = a.Start_date.ToString("HH:mm"),
                     status = a.Status.ToString(),
                     price = service?.ServicePrice ?? 0,
-                    notes = a.Notes
+                    notes = a.Notes,
+                    IsTraining = a.IsTraining,
+
                 };
             }).ToList();
 
@@ -190,7 +194,9 @@ namespace API.Controllers
                         time = a.Start_date.ToString("HH:mm"),
                         status = a.Status.ToString(),
                         price = service?.ServicePrice ?? 0,
-                        notes = a.Notes
+                        notes = a.Notes,
+                        IsTraining = a.IsTraining,
+
                     };
                 }).ToList();
 
@@ -232,7 +238,8 @@ namespace API.Controllers
                         time = a.Start_date.ToString("HH:mm"),
                         status = a.Status.ToString(),
                         price = service?.ServicePrice ?? 0,
-                        notes = a.Notes
+                        notes = a.Notes,
+                        IsTraining = a.IsTraining
                     };
                 }).ToList();
 
